@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "midibroadcaster",
+  "version": "${version}",
+  "name": "MidiBroadcaster",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/midibroadcaster/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "codes.shiftmc.midibroadcaster.client.MidibroadcasterClient"
+    ],
+    "main": [
+      "codes.shiftmc.midibroadcaster.Midibroadcaster"
+    ]
+  },
+  "mixins": [
+    "midibroadcaster.mixins.json",
+    {
+      "config": "midibroadcaster.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
