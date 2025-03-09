@@ -1,0 +1,4 @@
+name: MIDIPlayer
+version: '1.0.0'
+main: codes.shiftmc.mIDIPlayer.MIDIPlayer
+api-version: '1.21'
