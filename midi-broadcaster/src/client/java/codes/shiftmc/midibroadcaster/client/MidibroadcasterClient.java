@@ -2,6 +2,12 @@ package codes.shiftmc.midibroadcaster.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.network.packet.c2s.common.CustomPayloadC2SPacket;
 
 import javax.sound.midi.*;
 
@@ -36,6 +42,10 @@ public class MidibroadcasterClient implements ClientModInitializer {
         } catch (MidiUnavailableException e) {
             throw new RuntimeException(e);
         }
+
+        // Register plugin messaging channels
+        PayloadTypeRegistry.playC2S().register(FabricPluginMessage.CHANNEL_ID, FabricPluginMessage.CODEC);
+        PayloadTypeRegistry.playS2C().register(FabricPluginMessage.CHANNEL_ID, FabricPluginMessage.CODEC);
     }
 
     public static class MidiInputReceiver implements Receiver {
@@ -46,14 +56,20 @@ public class MidibroadcasterClient implements ClientModInitializer {
                 int note = sm.getData1();
                 int velocity = sm.getData2();
 
-                if (channels != null && channels.length > 0) {
-                    if (command == ShortMessage.NOTE_ON) {
-                        channels[0].noteOn(note, velocity);
-                        System.out.println("Playing Note: " + note + " Velocity: " + velocity);
-                    } else if (command == ShortMessage.NOTE_OFF) {
-                        channels[0].noteOff(note);
-                        System.out.println("Stopping Note: " + note);
-                    }
+                if (isPlayerInServer()) {
+                    System.out.println("Sent " + note);
+
+                    var buf = PacketByteBufs.create();
+                    buf.writeInt(command);
+                    buf.writeInt(note);
+                    buf.writeInt(velocity);
+
+                    var client = MinecraftClient.getInstance();
+                    client.getNetworkHandler().sendPacket(
+                            new CustomPayloadC2SPacket(
+                                    new FabricPluginMessage(buf)
+                            )
+                    );
                 }
             }
         }
@@ -61,6 +77,14 @@ public class MidibroadcasterClient implements ClientModInitializer {
         @Override
         public void close() {
             // Implement if necessary
+        }
+
+        /**
+         * Checks if the player is currently in a multiplayer server.
+         */
+        private boolean isPlayerInServer() {
+            var client = MinecraftClient.getInstance();
+            return client.getNetworkHandler() != null && !client.isInSingleplayer();
         }
     }
 
