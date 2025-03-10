@@ -22,15 +22,15 @@ public class MidiMapper {
         if (midiNote >= 30 && midiNote <= 53) {
             // Bass (wood)
             instrument = "bass";
-            noteBlockNote = midiNote - 30;  // 30 -> 0, 53 -> 23
+            noteBlockNote = midiNote - 30;
         } else if (midiNote >= 54 && midiNote <= 78) {
             // Piano/harp
             instrument = "piano";
-            noteBlockNote = midiNote - 54;  // 54 -> 0, 78 -> 24
+            noteBlockNote = midiNote - 54;
         } else if (midiNote >= 79 && midiNote <= 102) {
             // Bell
             instrument = "bell";
-            noteBlockNote = midiNote - 79;  // 79 -> 0, 102 -> 23
+            noteBlockNote = midiNote - 78;
         } else return null;
 
         float pitch = (float) (0.5 * Math.pow(2.0, noteBlockNote / 12.0));

@@ -2,10 +2,8 @@ package codes.shiftmc.midibroadcaster.client;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.packet.c2s.common.CustomPayloadC2SPacket;
 
@@ -52,9 +50,14 @@ public class MidibroadcasterClient implements ClientModInitializer {
         @Override
         public void send(MidiMessage message, long timeStamp) {
             if (message instanceof ShortMessage sm) {
+                var client = MinecraftClient.getInstance();
                 int command = sm.getCommand();
                 int note = sm.getData1();
                 int velocity = sm.getData2();
+
+                if (command == 128) return; // When stop pressing
+                var noteblock = MidiMapper.midiToNoteBlock(note);
+                MidiMapper.playNoteBlockSound(client.world, noteblock.instrument(), noteblock.pitch(), client.player.getBlockPos());
 
                 if (isPlayerInServer()) {
                     System.out.println("Sent " + note);
@@ -64,7 +67,6 @@ public class MidibroadcasterClient implements ClientModInitializer {
                     buf.writeInt(note);
                     buf.writeInt(velocity);
 
-                    var client = MinecraftClient.getInstance();
                     client.getNetworkHandler().sendPacket(
                             new CustomPayloadC2SPacket(
                                     new FabricPluginMessage(buf)
